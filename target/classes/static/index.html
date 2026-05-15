@@ -149,3 +149,127 @@
         <section class="view" id="employeesView">
             <div class="card">
                 <div class="card-header">
+                    <h2>All Employees</h2>
+                    <div class="filter-group">
+                        <select class="filter-select" id="deptFilter">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="employeesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Employee</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Salary</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesTableBody">
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="employeesEmpty" style="display:none;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <h3>No employees found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="employeeModal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Employee</h2>
+                <button class="modal-close" id="modalClose">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="employeeForm" novalidate>
+                <input type="hidden" id="formEmployeeId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="formFirstName">First Name *</label>
+                        <input type="text" id="formFirstName" placeholder="e.g. Rahul" required>
+                        <span class="form-error" id="errorFirstName"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formLastName">Last Name *</label>
+                        <input type="text" id="formLastName" placeholder="e.g. Sharma" required>
+                        <span class="form-error" id="errorLastName"></span>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="formEmail">Email *</label>
+                        <input type="email" id="formEmail" placeholder="e.g. rahul@company.com" required>
+                        <span class="form-error" id="errorEmail"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formDepartment">Department *</label>
+                        <input type="text" id="formDepartment" placeholder="e.g. Engineering" required>
+                        <span class="form-error" id="errorDepartment"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formDesignation">Designation *</label>
+                        <input type="text" id="formDesignation" placeholder="e.g. Software Engineer" required>
+                        <span class="form-error" id="errorDesignation"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formSalary">Salary *</label>
+                        <input type="number" id="formSalary" placeholder="e.g. 85000" required min="0">
+                        <span class="form-error" id="errorSalary"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formPhone">Phone</label>
+                        <input type="text" id="formPhone" placeholder="e.g. 9876543210" maxlength="10">
+                        <span class="form-error" id="errorPhone"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="formDob">Date of Birth</label>
+                        <input type="date" id="formDob">
+                    </div>
+                    <div class="form-group">
+                        <label for="formDoj">Date of Joining</label>
+                        <input type="date" id="formDoj">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="modalCancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="formSubmitBtn">
+                        <span id="submitBtnText">Create Employee</span>
+                        <div class="spinner" id="submitSpinner" style="display:none;"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="deleteOverlay">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>Delete Employee</h2>
+                <button class="modal-close" id="deleteModalClose">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <p class="delete-msg">Are you sure you want to delete <strong id="deleteEmployeeName"></strong>? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+                <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
