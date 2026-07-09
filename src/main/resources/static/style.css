@@ -55,6 +55,10 @@ body {
     line-height: 1.6;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
 /* ===== Animated Background ===== */
 .bg-blobs {
     position: fixed;
@@ -257,6 +261,11 @@ body {
     border-radius: var(--radius-md);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     min-width: 260px;
+}
+
+.search-box:focus-within {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 4px var(--accent-blue-glow);
 }
 
 .search-box:focus-within {
@@ -471,8 +480,13 @@ body {
     transition: background var(--transition-fast);
 }
 
+.data-table tbody tr {
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
 .data-table tbody tr:hover {
-    background: rgba(99, 102, 241, 0.04);
+    background: rgba(99, 102, 241, 0.08);
+    transform: translateY(-1px);
 }
 
 /* Employee cell with avatar */

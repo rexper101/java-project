@@ -141,6 +141,25 @@ function formatSalary(amount) {
     return '₹' + Number(amount).toLocaleString('en-IN');
 }
 
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+async function parseResponse(response) {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return { message: text };
+    }
+}
+
 // ===== Render Functions =====
 function updateStats() {
     const total = allEmployees.length;
@@ -184,6 +203,10 @@ function renderEmployeeRow(emp, showId = false) {
     const initials = getInitials(emp.firstName, emp.lastName);
     const color = getAvatarColor(emp.firstName + emp.lastName);
     const isActive = emp.active !== false;
+    const fullName = escapeHtml(`${emp.firstName || ''} ${emp.lastName || ''}`.trim());
+    const email = escapeHtml(emp.email || '');
+    const department = escapeHtml(emp.department || '');
+    const designation = escapeHtml(emp.designation || '');
 
     return `
         <tr>
@@ -192,14 +215,14 @@ function renderEmployeeRow(emp, showId = false) {
                 <div class="employee-cell">
                     <div class="avatar" style="background:${color}">${initials}</div>
                     <div>
-                        <div class="employee-name">${emp.firstName} ${emp.lastName}</div>
-                        ${!showId ? `<div class="employee-email">${emp.email}</div>` : ''}
+                        <div class="employee-name">${fullName}</div>
+                        ${!showId ? `<div class="employee-email">${email}</div>` : ''}
                     </div>
                 </div>
             </td>
-            ${showId ? `<td>${emp.email}</td>` : ''}
-            <td>${emp.department}</td>
-            <td>${emp.designation}</td>
+            ${showId ? `<td>${email}</td>` : ''}
+            <td>${department}</td>
+            <td>${designation}</td>
             <td><span class="salary">${formatSalary(emp.salary)}</span></td>
             <td>
                 <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
@@ -209,10 +232,10 @@ function renderEmployeeRow(emp, showId = false) {
             ${showId ? `
             <td>
                 <div class="actions-cell">
-                    <button class="btn-icon edit" title="Edit" onclick="editEmployee(${emp.id})">
+                    <button type="button" class="btn-icon edit" title="Edit" data-id="${emp.id}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button class="btn-icon delete" title="Delete" onclick="confirmDelete(${emp.id}, '${emp.firstName} ${emp.lastName}')">
+                    <button type="button" class="btn-icon delete" title="Delete" data-id="${emp.id}" data-name="${fullName}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                 </div>
@@ -252,17 +275,14 @@ function getFilteredEmployees() {
     const dept = dom.deptFilter.value;
 
     if (search) {
-        filtered = filtered.filter(e =>
-            e.firstName.toLowerCase().includes(search) ||
-            e.lastName.toLowerCase().includes(search) ||
-            e.email.toLowerCase().includes(search) ||
-            e.department.toLowerCase().includes(search) ||
-            e.designation.toLowerCase().includes(search)
-        );
+        filtered = filtered.filter(e => {
+            const searchable = `${e.firstName || ''} ${e.lastName || ''} ${e.email || ''} ${e.department || ''} ${e.designation || ''}`.toLowerCase();
+            return searchable.includes(search);
+        });
     }
 
     if (dept) {
-        filtered = filtered.filter(e => e.department === dept);
+        filtered = filtered.filter(e => (e.department || '') === dept);
     }
 
     return filtered;
@@ -272,10 +292,13 @@ function getFilteredEmployees() {
 async function loadEmployees() {
     try {
         const res = await apiGet(API_BASE);
-        allEmployees = res.data || [];
+        allEmployees = Array.isArray(res?.data) ? res.data : [];
         renderDashboard();
         renderEmployees(getFilteredEmployees());
     } catch (err) {
+        allEmployees = [];
+        renderDashboard();
+        renderEmployees([]);
         showToast('Failed to load employees: ' + err.message, 'error');
     }
 }
@@ -299,6 +322,7 @@ function switchView(view) {
 
 // ===== Modal =====
 function openModal(isEdit = false) {
+    document.body.classList.add('modal-open');
     dom.modalOverlay.classList.add('show');
     dom.modalTitle.textContent = isEdit ? 'Edit Employee' : 'Add Employee';
     dom.submitBtnText.textContent = isEdit ? 'Update Employee' : 'Create Employee';
@@ -306,6 +330,7 @@ function openModal(isEdit = false) {
 }
 
 function closeModal() {
+    document.body.classList.remove('modal-open');
     dom.modalOverlay.classList.remove('show');
     dom.employeeForm.reset();
     dom.formEmployeeId.value = '';
@@ -443,6 +468,18 @@ async function handleDelete() {
     }
 }
 
+function handleTableAction(event) {
+    const button = event.target.closest('button[data-id]');
+    if (!button) return;
+
+    const id = Number(button.dataset.id);
+    if (button.classList.contains('edit')) {
+        window.editEmployee(id);
+    } else if (button.classList.contains('delete')) {
+        window.confirmDelete(id, button.dataset.name || 'this employee');
+    }
+}
+
 // ===== Event Listeners =====
 function init() {
     // Navigation
@@ -477,6 +514,10 @@ function init() {
 
     // Add Employee
     dom.addBtn.addEventListener('click', () => openModal(false));
+
+    // Table actions
+    dom.recentTableBody.addEventListener('click', handleTableAction);
+    dom.employeesTableBody.addEventListener('click', handleTableAction);
 
     // Modal close
     dom.modalClose.addEventListener('click', closeModal);

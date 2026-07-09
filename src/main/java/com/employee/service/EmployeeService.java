@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -31,12 +32,14 @@ public class EmployeeService {
      * @throws DuplicateResourceException if the email already exists
      */
     public EmployeeDTO createEmployee(EmployeeDTO dto) {
-        if (employeeRepository.existsByEmailIgnoreCase(dto.getEmail())) {
+        EmployeeDTO normalizedDto = normalizeDto(dto);
+
+        if (employeeRepository.existsByEmailIgnoreCase(normalizedDto.getEmail())) {
             throw new DuplicateResourceException(
-                    "Employee with email '" + dto.getEmail() + "' already exists");
+                    "Employee with email '" + normalizedDto.getEmail() + "' already exists");
         }
 
-        Employee employee = mapToEntity(dto);
+        Employee employee = mapToEntity(normalizedDto);
         employee.setActive(true);
         Employee saved = employeeRepository.save(employee);
         return mapToDTO(saved);
@@ -73,23 +76,24 @@ public class EmployeeService {
      */
     public EmployeeDTO updateEmployee(Long id, EmployeeDTO dto) {
         Employee existing = findEmployeeOrThrow(id);
+        EmployeeDTO normalizedDto = normalizeDto(dto);
 
         // Check email uniqueness (only if the email is changing)
-        if (!existing.getEmail().equalsIgnoreCase(dto.getEmail())
-                && employeeRepository.existsByEmailIgnoreCase(dto.getEmail())) {
+        if (!existing.getEmail().equalsIgnoreCase(normalizedDto.getEmail())
+                && employeeRepository.existsByEmailIgnoreCase(normalizedDto.getEmail())) {
             throw new DuplicateResourceException(
-                    "Employee with email '" + dto.getEmail() + "' already exists");
+                    "Employee with email '" + normalizedDto.getEmail() + "' already exists");
         }
 
-        existing.setFirstName(dto.getFirstName());
-        existing.setLastName(dto.getLastName());
-        existing.setEmail(dto.getEmail());
-        existing.setDepartment(dto.getDepartment());
-        existing.setDesignation(dto.getDesignation());
-        existing.setSalary(dto.getSalary());
-        existing.setPhone(dto.getPhone());
-        existing.setDateOfBirth(dto.getDateOfBirth());
-        existing.setDateOfJoining(dto.getDateOfJoining());
+        existing.setFirstName(normalizedDto.getFirstName());
+        existing.setLastName(normalizedDto.getLastName());
+        existing.setEmail(normalizedDto.getEmail());
+        existing.setDepartment(normalizedDto.getDepartment());
+        existing.setDesignation(normalizedDto.getDesignation());
+        existing.setSalary(normalizedDto.getSalary());
+        existing.setPhone(normalizedDto.getPhone());
+        existing.setDateOfBirth(normalizedDto.getDateOfBirth());
+        existing.setDateOfJoining(normalizedDto.getDateOfJoining());
 
         Employee updated = employeeRepository.save(existing);
         return mapToDTO(updated);
@@ -112,8 +116,13 @@ public class EmployeeService {
      */
     @Transactional(readOnly = true)
     public List<EmployeeDTO> searchByName(String keyword) {
+        String normalizedKeyword = normalizeText(keyword);
+        if (normalizedKeyword == null || normalizedKeyword.isBlank()) {
+            return getAllEmployees();
+        }
+
         return employeeRepository
-                .findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(keyword, keyword)
+                .findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(normalizedKeyword, normalizedKeyword)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -147,6 +156,33 @@ public class EmployeeService {
         return employeeRepository.findById(Objects.requireNonNull(id, "Employee ID must not be null"))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with ID: " + id));
+    }
+
+    private EmployeeDTO normalizeDto(EmployeeDTO dto) {
+        if (dto == null) {
+            return EmployeeDTO.builder().build();
+        }
+
+        return EmployeeDTO.builder()
+                .id(dto.getId())
+                .firstName(normalizeText(dto.getFirstName()))
+                .lastName(normalizeText(dto.getLastName()))
+                .email(normalizeEmail(dto.getEmail()))
+                .department(normalizeText(dto.getDepartment()))
+                .designation(normalizeText(dto.getDesignation()))
+                .salary(dto.getSalary())
+                .phone(normalizeText(dto.getPhone()))
+                .dateOfBirth(dto.getDateOfBirth())
+                .dateOfJoining(dto.getDateOfJoining())
+                .build();
+    }
+
+    private String normalizeText(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     /** Map DTO → Entity */
