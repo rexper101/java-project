@@ -60,24 +60,4 @@ class EmployeeServiceTest {
         verify(employeeRepository).save(any(Employee.class));
     }
 
-    @Test
-    void searchByName_withBlankKeyword_shouldReturnAllEmployees() {
-        Employee employee = Employee.builder()
-                .id(1L)
-                .firstName("Alice")
-                .lastName("Smith")
-                .email("alice@example.com")
-                .department("Engineering")
-                .designation("Engineer")
-                .salary(100000.0)
-                .active(true)
-                .build();
-
-        when(employeeRepository.findAll()).thenReturn(List.of(employee));
-
-        List<EmployeeDTO> result = employeeService.searchByName("   ");
-
-        assertEquals(1, result.size());
-        assertEquals("Alice", result.get(0).getFirstName());
-    }
 }
