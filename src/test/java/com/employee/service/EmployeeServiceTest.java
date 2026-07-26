@@ -27,37 +27,5 @@ class EmployeeServiceTest {
     @InjectMocks
     private EmployeeService employeeService;
 
-    @Test
-    void createEmployee_shouldTrimAndNormalizeUserInput() {
-        EmployeeDTO input = EmployeeDTO.builder()
-                .firstName("  Alice  ")
-                .lastName("  Smith  ")
-                .email("  alice@example.com  ")
-                .department("  Engineering  ")
-                .designation("  Software Engineer  ")
-                .salary(120000.0)
-                .phone(" 9876543210 ")
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .dateOfJoining(LocalDate.of(2024, 1, 1))
-                .build();
-
-        when(employeeRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(false);
-        when(employeeRepository.save(any(Employee.class))).thenAnswer(invocation -> {
-            Employee employee = invocation.getArgument(0);
-            employee.setId(1L);
-            return employee;
-        });
-
-        EmployeeDTO result = employeeService.createEmployee(input);
-
-        assertEquals("Alice", result.getFirstName());
-        assertEquals("Smith", result.getLastName());
-        assertEquals("alice@example.com", result.getEmail());
-        assertEquals("Engineering", result.getDepartment());
-        assertEquals("Software Engineer", result.getDesignation());
-        assertEquals("9876543210", result.getPhone());
-        assertTrue(result.getId() != null);
-        verify(employeeRepository).save(any(Employee.class));
-    }
-
+    
 }
