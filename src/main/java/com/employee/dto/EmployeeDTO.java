@@ -41,6 +41,8 @@ public class EmployeeDTO {
     @Positive(message = "Salary must be a positive number")
     private Double salary;
 
+    private Boolean active;
+
     @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 digits")
     private String phone;
 

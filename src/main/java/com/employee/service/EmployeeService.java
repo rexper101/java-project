@@ -40,7 +40,9 @@ public class EmployeeService {
         }
 
         Employee employee = mapToEntity(normalizedDto);
-        employee.setActive(true);
+        if (employee.getActive() == null) {
+            employee.setActive(true);
+        }
         Employee saved = employeeRepository.save(employee);
         return mapToDTO(saved);
     }
@@ -91,6 +93,9 @@ public class EmployeeService {
         existing.setDepartment(normalizedDto.getDepartment());
         existing.setDesignation(normalizedDto.getDesignation());
         existing.setSalary(normalizedDto.getSalary());
+        if (normalizedDto.getActive() != null) {
+            existing.setActive(normalizedDto.getActive());
+        }
         existing.setPhone(normalizedDto.getPhone());
         existing.setDateOfBirth(normalizedDto.getDateOfBirth());
         existing.setDateOfJoining(normalizedDto.getDateOfJoining());
@@ -171,6 +176,7 @@ public class EmployeeService {
                 .department(normalizeText(dto.getDepartment()))
                 .designation(normalizeText(dto.getDesignation()))
                 .salary(dto.getSalary())
+                .active(dto.getActive())
                 .phone(normalizeText(dto.getPhone()))
                 .dateOfBirth(dto.getDateOfBirth())
                 .dateOfJoining(dto.getDateOfJoining())
@@ -194,6 +200,7 @@ public class EmployeeService {
                 .department(dto.getDepartment())
                 .designation(dto.getDesignation())
                 .salary(dto.getSalary())
+                .active(dto.getActive())
                 .phone(dto.getPhone())
                 .dateOfBirth(dto.getDateOfBirth())
                 .dateOfJoining(dto.getDateOfJoining())
@@ -210,6 +217,7 @@ public class EmployeeService {
                 .department(entity.getDepartment())
                 .designation(entity.getDesignation())
                 .salary(entity.getSalary())
+                .active(entity.getActive())
                 .phone(entity.getPhone())
                 .dateOfBirth(entity.getDateOfBirth())
                 .dateOfJoining(entity.getDateOfJoining())

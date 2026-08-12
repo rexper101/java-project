@@ -56,6 +56,7 @@ class EmployeeServiceTest {
         assertEquals("Engineering", result.getDepartment());
         assertEquals("Software Engineer", result.getDesignation());
         assertEquals("9876543210", result.getPhone());
+        assertEquals(Boolean.TRUE, result.getActive());
         assertTrue(result.getId() != null);
         verify(employeeRepository).save(any(Employee.class));
     }
