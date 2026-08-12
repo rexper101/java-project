@@ -43,7 +43,7 @@ class EmployeeServiceTest {
 
         when(employeeRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(false);
         when(employeeRepository.save(any(Employee.class))).thenAnswer(invocation -> {
-            Employee employee = invocation.getArgument(0);
+            Employee employee = invocation.getArgument(0, Employee.class);
             employee.setId(1L);
             return employee;
         });
